@@ -1,0 +1,395 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function userEmail() {
+      return request.auth.token.email;
+    }
+
+    function farmDoc(farmId) {
+      return get(/databases/$(database)/documents/farms/$(farmId));
+    }
+
+    function memberDoc(farmId) {
+      return get(/databases/$(database)/documents/farms/$(farmId)/members/$(request.auth.uid));
+    }
+
+    function inviteDoc(code) {
+      return get(/databases/$(database)/documents/inviteCodes/$(code));
+    }
+
+    function inviteExists(code) {
+      return exists(/databases/$(database)/documents/inviteCodes/$(code));
+    }
+
+    function inviteMatchesFarm(code, farmId) {
+      return inviteExists(code) && inviteDoc(code).data.farmId == farmId;
+    }
+
+    function deviceDoc(deviceId) {
+      return get(/databases/$(database)/documents/devices/$(deviceId));
+    }
+
+    function deviceExists(deviceId) {
+      return exists(/databases/$(database)/documents/devices/$(deviceId));
+    }
+
+    function registeredFarmDeviceExists(farmId, piCode) {
+      return exists(/databases/$(database)/documents/farms/$(farmId)/devices/$(piCode));
+    }
+
+    function deviceDataHasFarm(data, farmId) {
+      return data.farmId == farmId
+        || (data.farmIds is list && farmId in data.farmIds);
+    }
+
+    function cloudDeviceAfter(cloudDeviceId) {
+      return getAfter(/databases/$(database)/documents/devices/$(cloudDeviceId));
+    }
+
+    function farmDeviceAfter(farmId, piCode) {
+      return getAfter(/databases/$(database)/documents/farms/$(farmId)/devices/$(piCode));
+    }
+
+    function isFarmMember(farmId) {
+      return isVerifiedUser()
+        && exists(/databases/$(database)/documents/farms/$(farmId)/members/$(request.auth.uid))
+        && memberDoc(farmId).data.status == 'active';
+    }
+
+    function isFarmManager(farmId) {
+      return isFarmMember(farmId)
+        && (
+          memberDoc(farmId).data.role == 'Farm Owner'
+          || memberDoc(farmId).data.role == 'Agricultural Technician'
+        );
+    }
+
+    function isFarmOwner(farmId) {
+      return isFarmMember(farmId) && memberDoc(farmId).data.role == 'Farm Owner';
+    }
+
+    function canAccessDevice(deviceId) {
+      return deviceExists(deviceId)
+        && (
+          (isVerifiedUser() && deviceDoc(deviceId).data.ownerUid == request.auth.uid)
+          || (deviceDoc(deviceId).data.farmId is string && isFarmMember(deviceDoc(deviceId).data.farmId))
+        );
+    }
+
+    function canManageDevice(deviceId) {
+      return deviceExists(deviceId)
+        && (
+          (isVerifiedUser() && deviceDoc(deviceId).data.ownerUid == request.auth.uid)
+          || (deviceDoc(deviceId).data.farmId is string && isFarmManager(deviceDoc(deviceId).data.farmId))
+        );
+    }
+
+    function canCommandDeviceFromFarm(deviceId, farmId) {
+      return deviceExists(deviceId)
+        && deviceDataHasFarm(deviceDoc(deviceId).data, farmId)
+        && registeredFarmDeviceExists(farmId, deviceDoc(deviceId).data.piCode)
+        && isFarmMember(farmId);
+    }
+
+    function isOwnerBootstrapMember(farmId, memberId) {
+      return isVerifiedUser()
+        && memberId == request.auth.uid
+        && exists(/databases/$(database)/documents/farms/$(farmId))
+        && farmDoc(farmId).data.ownerUid == request.auth.uid
+        && request.resource.data.role == 'Farm Owner'
+        && request.resource.data.status == 'active';
+    }
+
+    function isSelfJoinWithInvite(farmId, memberId) {
+      return isVerifiedUser()
+        && memberId == request.auth.uid
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email == userEmail()
+        && request.resource.data.role == 'Farm Member'
+        && request.resource.data.status == 'active'
+        && request.resource.data.inviteCode is string
+        && inviteMatchesFarm(request.resource.data.inviteCode, farmId);
+    }
+
+    // User profile for the currently authenticated Firebase account.
+    match /users/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow create: if isSignedIn()
+        && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.email == userEmail();
+      allow update: if isSignedIn()
+        && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.email == resource.data.email;
+      allow delete: if false;
+    }
+
+    match /inviteCodes/{code} {
+      allow get: if isVerifiedUser();
+      allow list: if false;
+      allow create: if isVerifiedUser()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.farmId is string
+        && request.resource.data.farmName is string;
+      allow update, delete: if isVerifiedUser()
+        && resource.data.ownerUid == request.auth.uid;
+    }
+
+    match /farms/{farmId} {
+      allow read: if isFarmMember(farmId);
+      allow create: if isVerifiedUser()
+        && request.resource.data.ownerUid == request.auth.uid;
+      allow update, delete: if isFarmOwner(farmId);
+
+      match /members/{memberId} {
+        allow read: if isFarmMember(farmId) || (isSignedIn() && request.auth.uid == memberId);
+        allow create: if isFarmOwner(farmId)
+          || isOwnerBootstrapMember(farmId, memberId)
+          || isSelfJoinWithInvite(farmId, memberId);
+        allow update, delete: if isFarmOwner(farmId);
+      }
+
+      match /invites/{inviteId} {
+        allow read: if isFarmManager(farmId)
+          || (isVerifiedUser() && resource.data.invitedEmail == userEmail());
+        allow create, update, delete: if isFarmManager(farmId);
+      }
+
+      match /settings/{settingId} {
+        allow read: if isFarmMember(farmId);
+        allow create, update: if isFarmManager(farmId)
+          && settingId == 'spray';
+        allow delete: if isFarmOwner(farmId);
+      }
+
+      match /sprayEvents/{eventId} {
+        allow read: if isFarmMember(farmId);
+        allow create: if isFarmMember(farmId)
+          && request.resource.data.byUid == request.auth.uid
+          && request.resource.data.product is string
+          && request.resource.data.litersUsed is number
+          && request.resource.data.costPhp is number;
+        allow update, delete: if isFarmOwner(farmId);
+      }
+
+      match /tasks/{taskId} {
+        allow read: if isFarmMember(farmId);
+        allow create: if isFarmOwner(farmId)
+          && request.resource.data.farmId == farmId
+          && request.resource.data.createdByUid == request.auth.uid
+          && request.resource.data.status == 'open';
+        allow update: if isFarmOwner(farmId)
+          || (
+            isFarmMember(farmId)
+            && resource.data.assigneeUid == request.auth.uid
+            && request.resource.data.farmId == resource.data.farmId
+            && request.resource.data.title == resource.data.title
+            && request.resource.data.details == resource.data.details
+            && request.resource.data.assigneeUid == resource.data.assigneeUid
+            && request.resource.data.assigneeName == resource.data.assigneeName
+            && request.resource.data.assigneeEmail == resource.data.assigneeEmail
+            && request.resource.data.createdByUid == resource.data.createdByUid
+            && request.resource.data.createdByName == resource.data.createdByName
+            && request.resource.data.createdAt == resource.data.createdAt
+            && (
+              request.resource.data.status == 'open'
+              || request.resource.data.status == 'done'
+            )
+          );
+        allow delete: if isFarmOwner(farmId);
+      }
+
+      match /devices/{deviceId} {
+        allow read: if isFarmMember(farmId);
+        allow create: if isFarmOwner(farmId)
+          && request.resource.data.farmId == farmId
+          && request.resource.data.piCode == deviceId
+          && request.resource.data.ownerUid == request.auth.uid
+          && request.resource.data.ownerUid == farmDoc(farmId).data.ownerUid
+          && request.resource.data.cloudDeviceId is string
+          && cloudDeviceAfter(request.resource.data.cloudDeviceId).data.deviceId == request.resource.data.cloudDeviceId
+          && cloudDeviceAfter(request.resource.data.cloudDeviceId).data.piCode == deviceId
+          && cloudDeviceAfter(request.resource.data.cloudDeviceId).data.ownerUid == request.auth.uid
+          && deviceDataHasFarm(cloudDeviceAfter(request.resource.data.cloudDeviceId).data, farmId);
+        allow update: if isFarmOwner(farmId)
+          && request.resource.data.farmId == resource.data.farmId
+          && request.resource.data.piCode == resource.data.piCode
+          && request.resource.data.ownerUid == resource.data.ownerUid
+          && (resource.data.cloudDeviceId == null || request.resource.data.cloudDeviceId == resource.data.cloudDeviceId);
+        allow delete: if isFarmOwner(farmId);
+
+        match /samples/{sampleId} {
+          allow read: if isFarmMember(farmId);
+          allow create, update: if isFarmMember(farmId)
+            && request.resource.data.t is number;
+          allow delete: if isFarmOwner(farmId);
+        }
+
+        match /forecastAudits/{auditId} {
+          allow read: if isFarmMember(farmId);
+          allow create, update: if isFarmMember(farmId)
+            && request.resource.data.farmId == farmId
+            && request.resource.data.deviceId == deviceId
+            && request.resource.data.startMs is number
+            && request.resource.data.dueMs is number;
+          allow delete: if isFarmOwner(farmId);
+        }
+      }
+
+      match /community/{postId} {
+        allow read: if isFarmMember(farmId);
+        allow create: if isFarmMember(farmId)
+          && request.resource.data.keys().hasOnly([
+            'authorUid',
+            'authorName',
+            'authorRole',
+            'body',
+            'createdAt',
+            'likedBy'
+          ])
+          && request.resource.data.authorUid == request.auth.uid
+          && request.resource.data.authorRole == memberDoc(farmId).data.role
+          && request.resource.data.authorName is string
+          && request.resource.data.body is string
+          && request.resource.data.likedBy is list;
+        allow update: if isFarmMember(farmId)
+          && request.resource.data.keys().hasOnly([
+            'authorUid',
+            'authorName',
+            'authorRole',
+            'body',
+            'createdAt',
+            'likedBy'
+          ])
+          && request.resource.data.authorUid == resource.data.authorUid
+          && request.resource.data.authorName == resource.data.authorName
+          && request.resource.data.authorRole == resource.data.authorRole
+          && request.resource.data.body == resource.data.body
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.likedBy is list;
+        allow delete: if isFarmOwner(farmId)
+          || (isFarmMember(farmId) && resource.data.authorUid == request.auth.uid);
+
+        match /replies/{replyId} {
+          allow read: if isFarmMember(farmId);
+          allow create: if isFarmMember(farmId)
+            && request.resource.data.keys().hasOnly([
+              'authorUid',
+              'authorName',
+              'authorRole',
+              'body',
+              'createdAt',
+              'likedBy'
+            ])
+            && request.resource.data.authorUid == request.auth.uid
+            && request.resource.data.authorRole == memberDoc(farmId).data.role
+            && request.resource.data.authorName is string
+            && request.resource.data.body is string
+            && request.resource.data.likedBy is list;
+          allow update: if isFarmMember(farmId)
+            && request.resource.data.keys().hasOnly([
+              'authorUid',
+              'authorName',
+              'authorRole',
+              'body',
+              'createdAt',
+              'likedBy'
+            ])
+            && request.resource.data.authorUid == resource.data.authorUid
+            && request.resource.data.authorName == resource.data.authorName
+            && request.resource.data.authorRole == resource.data.authorRole
+            && request.resource.data.body == resource.data.body
+            && request.resource.data.createdAt == resource.data.createdAt
+            && request.resource.data.likedBy is list;
+          allow delete: if isFarmOwner(farmId)
+            || (isFarmMember(farmId) && resource.data.authorUid == request.auth.uid);
+        }
+      }
+    }
+
+    // Device state is written by the Pi through the Admin SDK. Mobile users
+    // can read assigned devices, and managers can register/edit metadata.
+    match /devices/{deviceId} {
+      // Devices are readable only by the device owner or an active member of the
+      // device's farm. canAccessDevice() (defined above) checks ownerUid or farm
+      // membership and is already used by detections/deviceCommands.
+      // Previously "allow read: if true" (demo cloud-monitoring) — removed because
+      // it exposed publicApiUrl (Pi tunnel), ownerUid, farmId, and telemetry to any
+      // unauthenticated client. See Documents/CLAUDE_SECURITY_COST_RESEARCH.md.
+      allow read: if canAccessDevice(deviceId);
+      allow create: if request.resource.data.deviceId == deviceId
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == farmDoc(request.resource.data.farmId).data.ownerUid
+        && isFarmOwner(request.resource.data.farmId)
+        && deviceDataHasFarm(request.resource.data, request.resource.data.farmId)
+        && farmDeviceAfter(request.resource.data.farmId, request.resource.data.piCode).data.piCode == request.resource.data.piCode
+        && farmDeviceAfter(request.resource.data.farmId, request.resource.data.piCode).data.ownerUid == request.auth.uid
+        && (
+          farmDeviceAfter(request.resource.data.farmId, request.resource.data.piCode).data.cloudDeviceId == null
+          || farmDeviceAfter(request.resource.data.farmId, request.resource.data.piCode).data.cloudDeviceId == deviceId
+        );
+      allow update: if (
+          isVerifiedUser()
+          && request.resource.data.deviceId == deviceId
+          && (resource.data.piCode == null || request.resource.data.piCode == resource.data.piCode)
+          && request.resource.data.farmId is string
+          && (
+            (
+              resource.data.ownerUid == request.auth.uid
+              && request.resource.data.ownerUid == resource.data.ownerUid
+              && farmDoc(request.resource.data.farmId).data.ownerUid == request.auth.uid
+            )
+            || (
+              !(resource.data.ownerUid is string)
+              && canManageDevice(deviceId)
+              && farmDoc(request.resource.data.farmId).data.ownerUid == request.auth.uid
+              && (
+                !(request.resource.data.ownerUid is string)
+                || request.resource.data.ownerUid == request.auth.uid
+              )
+            )
+          )
+        );
+      allow delete: if canManageDevice(deviceId);
+    }
+
+    // Optional parent doc used as an aggregate holder for per-device detections.
+    match /detections/{deviceId} {
+      allow read: if canAccessDevice(deviceId);
+      allow write: if false;
+
+      match /events/{eventId} {
+        allow read: if canAccessDevice(deviceId);
+        allow write: if false;
+      }
+    }
+
+    // Mobile app writes commands; Pi consumes them via Admin SDK or server code.
+    match /deviceCommands/{deviceId} {
+      allow read: if canAccessDevice(deviceId);
+      allow create, update: if (
+          (request.resource.data.farmId is string && canCommandDeviceFromFarm(deviceId, request.resource.data.farmId))
+          || (!(request.resource.data.farmId is string) && canAccessDevice(deviceId))
+        )
+        && request.resource.data.targetDeviceId == deviceId
+        && request.resource.data.source == 'expo-app';
+      allow delete: if false;
+    }
+
+    // Pi writes analytics via Admin SDK; authenticated farm members can read.
+    match /analytics/{farmId}/daily/{dayId} {
+      allow read: if isFarmMember(farmId);
+      allow write: if false;
+    }
+  }
+}

@@ -1,0 +1,12 @@
+# Files and folders to exclude when publishing or packaging locally
+node_modules
+.expo
+.expo-shared
+.vscode
+dist/
+build/
+android/
+ios/
+*.log
+*.tgz
+secrets/
