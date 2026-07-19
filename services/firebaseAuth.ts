@@ -31,6 +31,15 @@ import {
   type User,
 } from 'firebase/auth';
 import { firebaseConfig, hasFirebaseConfig } from './firebase';
+import { DESIGN_MODE } from '@/constants/designMode';
+
+/** Fake signed-in user for the UI-only design preview (no backend). */
+const DESIGN_USER: AppUser = {
+  uid: 'design-user',
+  email: 'designer@insectra.app',
+  fullName: 'Design Preview',
+  emailVerified: true,
+};
 
 let cachedAuth: Auth | null = null;
 
@@ -143,6 +152,7 @@ function toAppUser(u: User, fallbackName?: string): AppUser {
  * Throws on duplicate email or weak password.
  */
 export async function registerWithFirebase(input: RegisterInput): Promise<AppUser> {
+  if (DESIGN_MODE) return DESIGN_USER;
   const email = input.email.trim().toLowerCase();
   const fullName = input.fullName.trim();
   if (!email || !fullName || !input.password) throw new Error('All fields are required.');
@@ -176,6 +186,7 @@ export async function registerWithFirebase(input: RegisterInput): Promise<AppUse
  * Sign in. Throws if credentials are wrong OR if the email has not been verified.
  */
 export async function signInWithFirebase(input: SignInInput): Promise<AppUser> {
+  if (DESIGN_MODE) return DESIGN_USER;
   const email = input.email.trim().toLowerCase();
   if (!email || !input.password) throw new Error('Enter both email and password.');
   const auth = getFirebaseAuth();
@@ -206,6 +217,7 @@ export class EmailNotVerifiedError extends Error {
 }
 
 export async function resendVerificationEmail(): Promise<void> {
+  if (DESIGN_MODE) return;
   const auth = getFirebaseAuth();
   if (!auth.currentUser) throw new Error('No active session. Please sign in again.');
   await sendEmailVerification(
@@ -216,6 +228,7 @@ export async function resendVerificationEmail(): Promise<void> {
 
 /** Reload the user's record from the server to pick up email verification changes. */
 export async function refreshVerificationStatus(): Promise<boolean> {
+  if (DESIGN_MODE) return true;
   const auth = getFirebaseAuth();
   const u = auth.currentUser;
   if (!u) return false;
@@ -235,11 +248,13 @@ export async function refreshVerificationStatus(): Promise<boolean> {
 }
 
 export async function signOutFirebase(): Promise<void> {
+  if (DESIGN_MODE) return;
   await fbSignOut(getFirebaseAuth());
 }
 
 /** Send a password-reset email to the given address. */
 export async function sendPasswordReset(email: string): Promise<void> {
+  if (DESIGN_MODE) return;
   const trimmed = email.trim().toLowerCase();
   if (!trimmed) throw new Error('Enter the email address for the account.');
   await sendPasswordResetEmail(
@@ -250,12 +265,17 @@ export async function sendPasswordReset(email: string): Promise<void> {
 }
 
 export function getCurrentAppUser(): AppUser | null {
+  if (DESIGN_MODE) return DESIGN_USER;
   const u = getFirebaseAuth().currentUser;
   return u ? toAppUser(u) : null;
 }
 
 /** Subscribe to auth state changes. Returns unsubscribe. */
 export function subscribeAuth(cb: (user: AppUser | null) => void): () => void {
+  if (DESIGN_MODE) {
+    cb(DESIGN_USER);
+    return () => {};
+  }
   return onAuthStateChanged(getFirebaseAuth(), (u) => {
     cb(u ? toAppUser(u) : null);
   });
@@ -267,6 +287,7 @@ export function subscribeAuth(cb: (user: AppUser | null) => void): () => void {
  * `users/{uid}.fullName` so the dashboard greeting reflects the change.
  */
 export async function updateUserFullName(newName: string): Promise<AppUser> {
+  if (DESIGN_MODE) return { ...DESIGN_USER, fullName: newName.trim() || DESIGN_USER.fullName };
   const trimmed = newName.trim();
   if (!trimmed) throw new Error('Name cannot be empty.');
   const u = getFirebaseAuth().currentUser;
@@ -295,6 +316,7 @@ export async function changePassword(
   currentPassword: string,
   newPassword: string,
 ): Promise<void> {
+  if (DESIGN_MODE) return;
   if (!currentPassword) throw new Error('Enter your current password.');
   if (!newPassword || newPassword.length < 8) {
     throw new Error('New password must be at least 8 characters.');
