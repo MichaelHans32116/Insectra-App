@@ -1,4 +1,5 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
+import { DESIGN_MODE } from '@/constants/designMode';
 import {
   addDoc,
   collection,
@@ -82,6 +83,24 @@ function mapTask(farmId: string, snapshot: any): FarmTask {
 }
 
 export function subscribeFarmTasks(farmId: string, onChange: (tasks: FarmTask[]) => void): () => void {
+  if (DESIGN_MODE) {
+    const iso = (d: number) => new Date(Date.now() - d * 86_400_000).toISOString();
+    onChange([
+      { id: 't1', farmId, title: 'Palitan ang cue lure sa Trap 1', details: 'Lure is about 5 weeks old.',
+        assigneeUid: 'design-user', assigneeName: 'Design Preview', assigneeEmail: 'designer@insectra.app',
+        createdByUid: 'design-user', createdByName: 'Design Preview', status: 'open',
+        createdAt: iso(1), updatedAt: iso(1), completedAt: null },
+      { id: 't2', farmId, title: 'Linisin ang camera window', details: 'May alikabok sa acrylic slide.',
+        assigneeUid: 'u2', assigneeName: 'Angeline R.', assigneeEmail: 'angeline@example.com',
+        createdByUid: 'design-user', createdByName: 'Design Preview', status: 'open',
+        createdAt: iso(2), updatedAt: iso(2), completedAt: null },
+      { id: 't3', farmId, title: 'I-check ang solar battery', details: 'Verify 5.1V output sa XL4015.',
+        assigneeUid: 'u3', assigneeName: 'Mang Ramon', assigneeEmail: 'ramon@example.com',
+        createdByUid: 'design-user', createdByName: 'Design Preview', status: 'done',
+        createdAt: iso(6), updatedAt: iso(4), completedAt: iso(4) },
+    ]);
+    return () => {};
+  }
   // Cap to the 50 most-recently-created tasks (re-sorted client-side: open
   // first, newest updated). Prevents an unbounded whole-collection read as the
   // farm accumulates task history. All app-created tasks carry createdAt.
@@ -106,6 +125,24 @@ export function subscribeAssignedTasks(
   assigneeUid: string,
   onChange: (tasks: FarmTask[]) => void,
 ): () => void {
+  if (DESIGN_MODE) {
+    const iso = (d: number) => new Date(Date.now() - d * 86_400_000).toISOString();
+    onChange([
+      { id: 't1', farmId, title: 'Palitan ang cue lure sa Trap 1', details: 'Lure is about 5 weeks old.',
+        assigneeUid: 'design-user', assigneeName: 'Design Preview', assigneeEmail: 'designer@insectra.app',
+        createdByUid: 'design-user', createdByName: 'Design Preview', status: 'open',
+        createdAt: iso(1), updatedAt: iso(1), completedAt: null },
+      { id: 't2', farmId, title: 'Linisin ang camera window', details: 'May alikabok sa acrylic slide.',
+        assigneeUid: 'u2', assigneeName: 'Angeline R.', assigneeEmail: 'angeline@example.com',
+        createdByUid: 'design-user', createdByName: 'Design Preview', status: 'open',
+        createdAt: iso(2), updatedAt: iso(2), completedAt: null },
+      { id: 't3', farmId, title: 'I-check ang solar battery', details: 'Verify 5.1V output sa XL4015.',
+        assigneeUid: 'u3', assigneeName: 'Mang Ramon', assigneeEmail: 'ramon@example.com',
+        createdByUid: 'design-user', createdByName: 'Design Preview', status: 'done',
+        createdAt: iso(6), updatedAt: iso(4), completedAt: iso(4) },
+    ]);
+    return () => {};
+  }
   const taskQuery = query(
     collection(db(), 'farms', farmId, 'tasks'),
     where('assigneeUid', '==', assigneeUid),

@@ -13,6 +13,7 @@
  * A user may belong to multiple farms (one as owner, others as member).
  */
 import { initializeApp, getApp, getApps } from 'firebase/app';
+import { DESIGN_MODE } from '@/constants/designMode';
 import {
   addDoc,
   arrayUnion,
@@ -290,6 +291,13 @@ export async function joinGroupByCode(input: {
 
 // ── Listings ─────────────────────────────────────────────────────────────
 export async function listGroupsForUser(uid: string): Promise<Array<Group & { role: GroupRole }>> {
+  if (DESIGN_MODE) {
+    return [{
+      id: 'design-farm-1', name: 'Sto. Tomas Ampalaya Farm', ownerUid: 'design-user',
+      ownerEmail: 'designer@insectra.app', inviteCode: 'DESIGN1',
+      createdAt: new Date().toISOString(), role: 'Farm Owner',
+    }];
+  }
   // Strategy: read /users/{uid}.farmIds (denormalized list maintained by
   // createGroup/joinGroupByCode), then fetch each farm + member doc.
   // This avoids a collectionGroup query, which Firestore rules cannot

@@ -17,6 +17,7 @@
  * Read access is open to anyone in the farm group; write access is
  * Owner-only (enforced by Firestore rules).
  */
+import { DESIGN_MODE } from '@/constants/designMode';
 import { doc, onSnapshot, setDoc, getFirestore } from 'firebase/firestore';
 import { initializeApp, getApps } from 'firebase/app';
 import { firebaseConfig, hasFirebaseConfig } from '@/services/firebase';
@@ -38,6 +39,7 @@ function ensureFirestore() {
  * the current target device stays attached.
  */
 export function attachRemotePiListener(deviceId: string | null | undefined) {
+  if (DESIGN_MODE) return ;
   const normalizedDeviceId = (deviceId ?? '').trim() || null;
   if (!normalizedDeviceId) {
     detachRemotePiListener();

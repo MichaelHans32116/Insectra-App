@@ -13,6 +13,7 @@
  * Multiple phones can connect simultaneously — the Pi HTTP API is stateless.
  */
 
+import { DESIGN_MODE } from '@/constants/designMode';
 import Constants from 'expo-constants';
 
 const PI_API_PORT = 8080;
@@ -42,6 +43,7 @@ let _remoteReachable = false;
 let _lanReachable = false; // updated by probeHost()
 
 export function getCachedPiHost(): string | null {
+  if (DESIGN_MODE) return null;
   return _lanReachable ? _cachedHost : null;
 }
 
@@ -74,10 +76,12 @@ export function setRemotePiBase(url: string | null | undefined) {
 }
 
 export function getRemotePiBase(): string | null {
+  if (DESIGN_MODE) return null;
   return _remoteBase;
 }
 
 export function isRemotePiReachable(): boolean {
+  if (DESIGN_MODE) return false;
   return Boolean(_remoteBase && _remoteReachable);
 }
 
@@ -95,6 +99,7 @@ export function recordRemotePiProbe(url: string | null | undefined, reachable: b
  *   3. null (offline)
  */
 export function getPiApiBase(): string | null {
+  if (DESIGN_MODE) return null;
   if (_cachedHost && _lanReachable) return `http://${_cachedHost}:${PI_API_PORT}`;
   if (_remoteBase && _remoteReachable) return _remoteBase;
   return null;
@@ -225,6 +230,7 @@ async function scanBatch(ips: string[]): Promise<string | null> {
  * Returns the working host IP/hostname, or null if not found.
  */
 export async function discoverPi(): Promise<string | null> {
+  if (DESIGN_MODE) return null;
   if (_discovering) {
     // Already running, wait for result
     return new Promise((resolve) => {
@@ -320,6 +326,7 @@ export async function discoverPi(): Promise<string | null> {
  * Use this for periodic "still connected?" checks.
  */
 export async function checkPiConnection(): Promise<boolean> {
+  if (DESIGN_MODE) return false;
   if (_cachedHost) {
     const result = await probeHost(_cachedHost);
     _lanReachable = result !== null;
@@ -341,6 +348,7 @@ export async function checkPiConnection(): Promise<boolean> {
  * Force re-discovery (e.g., when user taps "Reconnect").
  */
 export async function rediscoverPi(): Promise<string | null> {
+  if (DESIGN_MODE) return null;
   _cachedHost = null;
   return discoverPi();
 }

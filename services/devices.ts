@@ -19,6 +19,7 @@
  * The deviceId in this subcollection equals the piCode for uniqueness within the farm.
  */
 import { initializeApp, getApp, getApps } from 'firebase/app';
+import { DESIGN_MODE } from '@/constants/designMode';
 import {
   arrayUnion,
   collection,
@@ -229,6 +230,17 @@ export async function registerDevice(input: RegisterDeviceInput): Promise<Regist
 }
 
 export async function listDevicesForFarm(farmId: string): Promise<RegisteredDevice[]> {
+  if (DESIGN_MODE) {
+    const mk = (n: number, name: string, label: string, live: boolean): RegisteredDevice => ({
+      id: `INSECTRA-0${n}`, piCode: `INSECTRA-0${n}`, name, ownerUid: 'design-user', farmId,
+      latitude: 14.0865 + n * 0.002, longitude: 121.1453 + n * 0.002, locationLabel: label,
+      cropType: 'Ampalaya (bitter gourd)',
+      modules: { solarBattery: true, dataModule: true, attractantLightWarmYellow: true, interiorLightWhite: true },
+      liveDetectOn: live, registeredAt: new Date().toISOString(),
+    });
+    return [mk(1, 'Trap 1 - North Plot', 'North plot, near the trellis', true),
+            mk(2, 'Trap 2 - Creek Side', 'South-east corner by the creek', false)];
+  }
   const snap = await getDocs(collection(db(), 'farms', farmId, 'devices'));
   return snap.docs.map((d) => {
     const x = d.data() as any;

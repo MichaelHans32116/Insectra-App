@@ -10,6 +10,7 @@
  *     { authorUid, authorName, authorRole, body, createdAt }
  */
 import { initializeApp, getApp, getApps } from 'firebase/app';
+import { DESIGN_MODE } from '@/constants/designMode';
 import {
   addDoc,
   arrayRemove,
@@ -177,6 +178,21 @@ export function subscribePosts(
   cb: (posts: CommunityPost[]) => void,
   onError?: (error: Error) => void,
 ): () => void {
+  if (DESIGN_MODE) {
+    const ago = (m: number) => new Date(Date.now() - m * 60_000);
+    cb([
+      { id: 'p1', authorUid: 'u1', authorName: 'Melanie P.', authorRole: 'Farm Owner',
+        body: 'Tumaas ang catch sa Trap 1 ngayong umaga - 8 flies. May nakapansin din ba sa inyo?',
+        createdAt: ago(35), replyCount: 3, likedBy: ['u2', 'u3'] },
+      { id: 'p2', authorUid: 'u2', authorName: 'Angeline R.', authorRole: 'Farm Member',
+        body: 'Nag-spray kami ng bait last week. Bumaba naman ang damage sa bunga.',
+        createdAt: ago(180), replyCount: 1, likedBy: ['u1'] },
+      { id: 'p3', authorUid: 'u3', authorName: 'Mang Ramon', authorRole: 'Farm Member',
+        body: 'Paalala: palitan ang cue lure kada 4-6 na linggo para tuloy-tuloy ang bilang.',
+        createdAt: ago(1440), replyCount: 0, likedBy: [] },
+    ]);
+    return () => {};
+  }
   const q = query(
     collection(db(), 'farms', farmId, 'community'),
     orderBy('createdAt', 'desc'),

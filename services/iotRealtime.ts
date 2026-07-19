@@ -1,4 +1,5 @@
 import { initializeApp, getApps } from 'firebase/app';
+import { DESIGN_MODE } from '@/constants/designMode';
 import {
   doc,
   getFirestore,
@@ -181,6 +182,18 @@ export function listenDeviceState(
   deviceId: string,
   onChange: (state: DeviceState) => void,
 ): () => void {
+  if (DESIGN_MODE) {
+    onChange({
+      source: 'cloud', totalCount: 128, status: 'online', lastSeen: new Date(),
+      dailyCount: 6, lastConfidence: 0.94, inferenceMs: 210,
+      lastDetection: new Date(Date.now() - 12 * 60_000),
+      temperature: 31.2, humidity: 78, visibleCount: 2,
+      batteryPercent: 82, batteryVoltage: 7.9, powerSource: 'solar',
+      signalStrength: -71, trapCapacity: 300, trapFullnessPercent: 43,
+      countSinceService: 128, farmName: 'Sto. Tomas Ampalaya Farm', farmZone: 'North plot',
+    });
+    return () => {};
+  }
   const db = ensureFirebase();
 
   // If Firebase is not configured, use direct Pi connection
