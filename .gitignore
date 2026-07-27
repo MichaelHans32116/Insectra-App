@@ -1,5 +1,6 @@
 node_modules/
-dist/
+# dist/ is committed on purpose: it lets the design team run
+# Start_Design_Preview.bat with nothing installed (no Node.js).
 .expo/
 .expo-shared/
 web-build/
