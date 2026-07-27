@@ -37,9 +37,19 @@ then prints a `http://192.168.x.x:8080/` address — type that into your phone's
 browser while on the same Wi-Fi. (Windows only allows other devices to connect
 when the launcher is elevated, hence the extra step.)
 
-### Installable Android APK (design preview)
-For a real app-on-a-phone feel with nothing to install on a computer, build the
-preview APK and share the download link:
+### Install it on an Android phone
+
+Scan this with your phone camera, or open the link — then tap **Install**:
+
+<img src="./install-qr.png" alt="QR code to install the InsecTra design preview APK" width="220" />
+
+**https://expo.dev/accounts/michaelhans32116/projects/insectra-design-preview/builds/ac24d14b-ace9-40f8-8ebb-545b42d6a24d**
+
+Android will warn about installing outside the Play Store — that is expected for
+a test build; allow it. This installs as **"InsecTra (Design Preview)"** and sits
+*next to* the real InsecTra app rather than replacing it.
+
+To produce a new APK after big changes:
 
 ```bash
 eas build -p android --profile preview
