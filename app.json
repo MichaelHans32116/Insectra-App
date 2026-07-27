@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "InsecTra (Design Preview)",
-    "slug": "insectra",
+    "slug": "insectra-design-preview",
     "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,14 +13,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.insectra.iot"
+      "bundleIdentifier": "com.insectra.iot.design"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.insectra.iot"
+      "package": "com.insectra.iot.design"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -32,6 +32,15 @@
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "owner": "michaelhans32116"
+    "owner": "michaelhans32116",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b9ff07b4-3e99-4d3b-8bc8-833512cd7157"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/b9ff07b4-3e99-4d3b-8bc8-833512cd7157"
+    }
   }
 }

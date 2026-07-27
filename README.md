@@ -37,6 +37,31 @@ then prints a `http://192.168.x.x:8080/` address — type that into your phone's
 browser while on the same Wi-Fi. (Windows only allows other devices to connect
 when the launcher is elevated, hence the extra step.)
 
+### Installable Android APK (design preview)
+For a real app-on-a-phone feel with nothing to install on a computer, build the
+preview APK and share the download link:
+
+```bash
+eas build -p android --profile preview
+```
+
+Once testers have that APK, design changes can be pushed to it over the air —
+no rebuild, no reinstall:
+
+```bash
+eas update --branch design --message "what changed"
+```
+
+> **This project is deliberately separate from the real app.** It uses its own
+> EAS project (`@michaelhans32116/insectra-design-preview`), its own channel
+> (`design`), and its own Android package (`com.insectra.iot.design`) so that
+> publishing a design build can never overwrite the real InsecTra app, and the
+> two can sit side by side on the same phone.
+>
+> Note: **Expo Go cannot load these updates.** EAS Update only reaches builds
+> that ship `expo-updates` (the APK above). Expo Go can only run from a live
+> dev server, which is what the developer mode below starts.
+
 ### Developer mode / Expo Go (only if you are editing the code)
 Double-click **`Start_Dev_Mode_Advanced.bat`** for live reload and the **Expo Go**
 QR code. This one *does* need [Node.js](https://nodejs.org) installed — Expo Go
