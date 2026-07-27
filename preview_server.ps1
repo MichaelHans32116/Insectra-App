@@ -3,9 +3,13 @@
 #  Serves BOTH design previews using only the PowerShell that
 #  ships with Windows. No Node.js, no npm, no downloads.
 #
-#    /           menu page
-#    /app        the mobile app UI  (from ./dist)
+#    /menu       menu page (this is what opens first)
+#    /           the mobile app UI  (from ./dist)
 #    /website    the expert portal  (from ./expert-portal)
+#
+#  The app has to live at "/" because Expo Router reads the URL path
+#  to pick a route - serving it from "/app" makes it render its own
+#  "Unmatched Route" screen instead of the dashboard.
 #
 #  Launched by Start_Design_Preview.bat.
 # ============================================================
@@ -54,7 +58,7 @@ if (-not $listener) {
     exit 1
 }
 
-$url = "http://localhost:$port/"
+$url = "http://localhost:$port/menu"
 
 $lanIp = $null
 if ($lanEnabled) {
@@ -72,7 +76,7 @@ Write-Host "  ===============================================" -ForegroundColor 
 Write-Host ""
 Write-Host "   On this PC:   $url" -ForegroundColor Cyan
 if ($lanIp) {
-    Write-Host "   On your PHONE (same Wi-Fi):  http://${lanIp}:$port/" -ForegroundColor Cyan
+    Write-Host "   On your PHONE (same Wi-Fi):  http://${lanIp}:$port/menu" -ForegroundColor Cyan
 } else {
     Write-Host "   Phone viewing: right-click the .bat and pick" -ForegroundColor DarkGray
     Write-Host "     'Run as administrator' to enable it." -ForegroundColor DarkGray
@@ -141,7 +145,7 @@ $menuHtml = @"
   <p class="sub">UI only. Nothing here talks to a real backend, so nothing you
      click can break anything.</p>
   <div class="grid">
-    <a class="card" href="/app"><div class="ico">&#128241;</div>
+    <a class="card" href="/"><div class="ico">&#128241;</div>
       <h2>Mobile app</h2><p>Every screen of the farmer app.</p></a>
     $siteCard
   </div>
@@ -183,7 +187,7 @@ try {
             $file = $null
             $body = $null
 
-            if ($path -eq '') {
+            if ($path -eq 'menu') {
                 $body = [System.Text.Encoding]::UTF8.GetBytes($menuHtml)
                 $response.ContentType = 'text/html; charset=utf-8'
             }
@@ -194,9 +198,6 @@ try {
                 } else {
                     $file = Join-Path $distRoot 'index.html'
                 }
-            }
-            elseif ($path -eq 'app') {
-                $file = Join-Path $distRoot 'index.html'
             }
             else {
                 # Everything else is an app asset (/_expo/..., /assets/...) or an
