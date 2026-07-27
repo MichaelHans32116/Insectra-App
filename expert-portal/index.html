@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>InsecTra Expert Portal</title>
+  <meta name="description" content="Expert operations dashboard for InsecTra trap monitoring, service priority, and field data quality." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-block">
+        <div class="brand-mark">IT</div>
+        <div>
+          <p class="eyebrow">InsecTra Expert Portal</p>
+          <h1>Operations dashboard</h1>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <div class="snapshot-meta">
+          <span>Snapshot</span>
+          <strong id="generatedAtLabel">Loading...</strong>
+        </div>
+        <button id="refreshDataBtn" class="btn btn-primary" type="button">
+          <i class="bi bi-arrow-clockwise"></i>
+          Refresh
+        </button>
+      </div>
+    </header>
+
+    <main class="content-grid">
+      <section class="system-strip">
+        <article class="system-card">
+          <span>Project</span>
+          <strong id="projectLabel">-</strong>
+        </article>
+        <article class="system-card">
+          <span>Mode</span>
+          <strong id="dataModeLabel">Snapshot</strong>
+        </article>
+        <article class="system-card">
+          <span>Analytics</span>
+          <strong id="analyticsChip">Checking</strong>
+        </article>
+        <article class="system-card">
+          <span>Visible rows</span>
+          <strong id="deviceCountLabel">0</strong>
+        </article>
+      </section>
+
+      <section class="summary-grid" id="summaryCards" aria-label="Operations summary"></section>
+
+      <section class="toolbar panel">
+        <div class="segmented-control" aria-label="Device filters">
+          <button class="filter-btn active" data-filter="all" type="button">All</button>
+          <button class="filter-btn" data-filter="online" type="button">Online</button>
+          <button class="filter-btn" data-filter="risk" type="button">Risk</button>
+          <button class="filter-btn" data-filter="geo" type="button">Needs geo</button>
+          <button class="filter-btn" data-filter="service" type="button">Service</button>
+        </div>
+        <div class="toolbar-right">
+          <label class="search-field">
+            <i class="bi bi-search"></i>
+            <input id="deviceFilter" type="search" placeholder="Search device, farm, risk" />
+          </label>
+          <button id="exportCsvBtn" class="btn btn-secondary" type="button">
+            <i class="bi bi-download"></i>
+            Export CSV
+          </button>
+        </div>
+      </section>
+
+      <section class="dashboard-grid">
+        <article class="panel panel-chart">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Signal split</p>
+              <h2>Coverage and pressure</h2>
+            </div>
+            <span class="chip chip-neutral" id="coverageNote">-</span>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="statusChart" aria-label="Status overview chart"></canvas>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Areas</p>
+              <h2>Province rollup</h2>
+            </div>
+          </div>
+          <div id="geoList" class="list-stack"></div>
+        </article>
+      </section>
+
+      <section class="dashboard-grid">
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Priority</p>
+              <h2>Service queue</h2>
+            </div>
+          </div>
+          <div id="priorityQueue" class="list-stack"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Treatments</p>
+              <h2>Recent spray log</h2>
+            </div>
+          </div>
+          <div id="sprayTimeline" class="list-stack"></div>
+        </article>
+      </section>
+
+      <section class="panel panel-map">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Spatial review</p>
+            <h2>Trap coverage map</h2>
+          </div>
+          <span class="chip" id="mapBadge">Waiting for coordinates</span>
+        </div>
+        <div id="mapContainer" class="map-shell"></div>
+        <p id="mapHint" class="helper-text"></p>
+      </section>
+
+      <section class="panel" id="device-table">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Registry</p>
+            <h2>Device status</h2>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="expert-table">
+            <thead>
+              <tr>
+                <th>Device</th>
+                <th>Farm</th>
+                <th>Risk</th>
+                <th>Health</th>
+                <th>Count</th>
+                <th>Environment</th>
+                <th>Geo</th>
+                <th>Link</th>
+              </tr>
+            </thead>
+            <tbody id="deviceTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel panel-notes">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Build</p>
+            <h2>Next backend steps</h2>
+          </div>
+        </div>
+        <ul id="notesList" class="notes-list"></ul>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="./app.js"></script>
+</body>
+</html>

@@ -1,12 +1,16 @@
 @echo off
 REM ============================================================
-REM  InsecTra - App Design Preview launcher (UI-only, no backend)
+REM  InsecTra - Design Preview launcher (UI-only, no backend)
 REM
-REM  Just double-click this file. Nothing to install:
-REM  it serves the prebuilt "dist" folder using the PowerShell
-REM  that already ships with Windows, then opens your browser.
+REM  Just double-click this file. Nothing to install: it serves
+REM  BOTH previews - the mobile app and the Expert Portal website
+REM  - using the PowerShell that already ships with Windows, then
+REM  opens your browser on a menu page.
 REM
-REM  (For live-reload development instead, see
+REM  To view it on a PHONE on the same Wi-Fi, right-click this
+REM  file and choose "Run as administrator" instead.
+REM
+REM  (For Expo Go or live-reload editing, see
 REM   Start_Dev_Mode_Advanced.bat - that one needs Node.js.)
 REM ============================================================
 cd /d "%~dp0"

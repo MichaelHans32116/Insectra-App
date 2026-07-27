@@ -1,0 +1,271 @@
+{
+  "generatedAt": "2026-07-27T01:30:00.000000+00:00",
+  "project": "insectra-design-preview",
+  "dataMode": "design-mock",
+  "nationalSummary": {
+    "totalDevices": 12,
+    "onlineDevices": 10,
+    "offlineDevices": 2,
+    "mappedDevices": 9,
+    "unmappedDevices": 3,
+    "criticalOperations": 3,
+    "highRiskDevices": 4,
+    "analyticsCoverage": "Sample data for design review only - not real farm data."
+  },
+  "geography": [
+    {
+      "name": "Batangas - Sto. Tomas",
+      "deviceCount": 5,
+      "online": 4,
+      "avgTrapFullnessPercent": 62,
+      "criticalOperations": 2,
+      "highRisk": 2
+    },
+    {
+      "name": "Laguna - Calamba",
+      "deviceCount": 4,
+      "online": 4,
+      "avgTrapFullnessPercent": 38,
+      "criticalOperations": 1,
+      "highRisk": 1
+    },
+    {
+      "name": "Quezon - Lucban",
+      "deviceCount": 3,
+      "online": 2,
+      "avgTrapFullnessPercent": 24,
+      "criticalOperations": 0,
+      "highRisk": 1
+    }
+  ],
+  "priorityQueue": [
+    {
+      "severity": "critical",
+      "title": "Trap full - needs servicing today",
+      "summary": "Catch container at 96% capacity; counts will under-report until emptied.",
+      "farmName": "Sto. Tomas Ampalaya Farm"
+    },
+    {
+      "severity": "critical",
+      "title": "Outbreak threshold crossed",
+      "summary": "Daily catch above action threshold for 3 straight days. Plan IPM within 48h.",
+      "farmName": "Malvar Bitter Gourd Co-op"
+    },
+    {
+      "severity": "warning",
+      "title": "Trap offline for 26 hours",
+      "summary": "No heartbeat since yesterday morning. Check power and signal.",
+      "farmName": "Lucban Upland Farm"
+    },
+    {
+      "severity": "warning",
+      "title": "Missing coordinates",
+      "summary": "Device is not mapped yet, so it is excluded from area aggregates.",
+      "farmName": "Calamba Trial Plot"
+    }
+  ],
+  "recentSprayEvents": [
+    {
+      "product": "Spinosad 12 SC (bait spray)",
+      "performedAt": "2026-07-26T22:10:00.000000+00:00",
+      "byName": "Melani R.",
+      "costPhp": 850,
+      "note": "Spot-sprayed the north trellis rows after the catch spike."
+    },
+    {
+      "product": "Protein hydrolysate bait",
+      "performedAt": "2026-07-24T23:45:00.000000+00:00",
+      "byName": "Geline S.",
+      "costPhp": 420,
+      "note": "Weekly bait refresh on perimeter traps."
+    },
+    {
+      "product": "Cue-lure refill",
+      "performedAt": "2026-07-21T01:15:00.000000+00:00",
+      "byName": "Michael H.",
+      "costPhp": 300,
+      "note": ""
+    }
+  ],
+  "devices": [
+    {
+      "name": "Trap 1 - North Plot",
+      "piCode": "INSECTRA-PI-001",
+      "deviceId": "trap-001",
+      "farmName": "Sto. Tomas Ampalaya Farm",
+      "farmId": "demo-farm-1",
+      "cropType": "Ampalaya (bitter gourd)",
+      "status": "online",
+      "lastSeen": "2026-07-27T01:25:00.000000+00:00",
+      "dailyCount": 46,
+      "totalCount": 1284,
+      "trapFullnessPercent": 96,
+      "temperature": 31.4,
+      "humidity": 78,
+      "signalPercent": 72,
+      "geoBucket": "Batangas - Sto. Tomas",
+      "coordinatesValid": true,
+      "latitude": 14.1079,
+      "longitude": 121.1416,
+      "risk": {
+        "level": "high",
+        "headline": "Catch above action threshold for 3 days"
+      },
+      "health": {
+        "level": "critical",
+        "headline": "Trap full - service today"
+      },
+      "dataQuality": { "location": "good" }
+    },
+    {
+      "name": "Trap 2 - South Trellis",
+      "piCode": "INSECTRA-PI-002",
+      "deviceId": "trap-002",
+      "farmName": "Sto. Tomas Ampalaya Farm",
+      "farmId": "demo-farm-1",
+      "cropType": "Ampalaya (bitter gourd)",
+      "status": "online",
+      "lastSeen": "2026-07-27T01:22:00.000000+00:00",
+      "dailyCount": 18,
+      "totalCount": 642,
+      "trapFullnessPercent": 41,
+      "temperature": 30.8,
+      "humidity": 81,
+      "signalPercent": 65,
+      "geoBucket": "Batangas - Sto. Tomas",
+      "coordinatesValid": true,
+      "latitude": 14.1064,
+      "longitude": 121.1452,
+      "risk": {
+        "level": "moderate",
+        "headline": "Catch rising but below threshold"
+      },
+      "health": {
+        "level": "good",
+        "headline": "Reporting normally"
+      },
+      "dataQuality": { "location": "good" }
+    },
+    {
+      "name": "Trap 3 - Co-op Block A",
+      "piCode": "INSECTRA-PI-003",
+      "deviceId": "trap-003",
+      "farmName": "Malvar Bitter Gourd Co-op",
+      "farmId": "demo-farm-2",
+      "cropType": "Ampalaya (bitter gourd)",
+      "status": "online",
+      "lastSeen": "2026-07-27T01:18:00.000000+00:00",
+      "dailyCount": 52,
+      "totalCount": 1730,
+      "trapFullnessPercent": 74,
+      "temperature": 32.1,
+      "humidity": 74,
+      "signalPercent": 88,
+      "geoBucket": "Batangas - Sto. Tomas",
+      "coordinatesValid": true,
+      "latitude": 14.0451,
+      "longitude": 121.1602,
+      "risk": {
+        "level": "high",
+        "headline": "Outbreak threshold crossed - plan IPM"
+      },
+      "health": {
+        "level": "warning",
+        "headline": "Fill above 70% - service soon"
+      },
+      "dataQuality": { "location": "good" }
+    },
+    {
+      "name": "Trap 4 - Calamba Trial",
+      "piCode": "INSECTRA-PI-004",
+      "deviceId": "trap-004",
+      "farmName": "Calamba Trial Plot",
+      "farmId": "demo-farm-3",
+      "cropType": "Upo (bottle gourd)",
+      "status": "online",
+      "lastSeen": "2026-07-27T01:12:00.000000+00:00",
+      "dailyCount": 9,
+      "totalCount": 288,
+      "trapFullnessPercent": 22,
+      "temperature": 29.9,
+      "humidity": 83,
+      "signalPercent": 54,
+      "geoBucket": "Unmapped",
+      "coordinatesValid": false,
+      "latitude": null,
+      "longitude": null,
+      "risk": {
+        "level": "low",
+        "headline": "Catch well below threshold"
+      },
+      "health": {
+        "level": "good",
+        "headline": "Reporting normally"
+      },
+      "dataQuality": { "location": "missing" }
+    },
+    {
+      "name": "Trap 5 - Lucban Upland",
+      "piCode": "INSECTRA-PI-005",
+      "deviceId": "trap-005",
+      "farmName": "Lucban Upland Farm",
+      "farmId": "demo-farm-4",
+      "cropType": "Patola (sponge gourd)",
+      "status": "offline",
+      "lastSeen": "2026-07-25T23:40:00.000000+00:00",
+      "dailyCount": 0,
+      "totalCount": 415,
+      "trapFullnessPercent": 33,
+      "temperature": null,
+      "humidity": null,
+      "signalPercent": 0,
+      "geoBucket": "Quezon - Lucban",
+      "coordinatesValid": true,
+      "latitude": 14.1136,
+      "longitude": 121.5563,
+      "risk": {
+        "level": "unknown",
+        "headline": "No recent data to score"
+      },
+      "health": {
+        "level": "critical",
+        "headline": "Offline for 26 hours"
+      },
+      "dataQuality": { "location": "good" }
+    },
+    {
+      "name": "Trap 6 - Calamba East",
+      "piCode": "INSECTRA-PI-006",
+      "deviceId": "trap-006",
+      "farmName": "Calamba Trial Plot",
+      "farmId": "demo-farm-3",
+      "cropType": "Upo (bottle gourd)",
+      "status": "online",
+      "lastSeen": "2026-07-27T01:05:00.000000+00:00",
+      "dailyCount": 27,
+      "totalCount": 903,
+      "trapFullnessPercent": 58,
+      "temperature": 30.2,
+      "humidity": 79,
+      "signalPercent": 61,
+      "geoBucket": "Laguna - Calamba",
+      "coordinatesValid": true,
+      "latitude": 14.2117,
+      "longitude": 121.1653,
+      "risk": {
+        "level": "moderate",
+        "headline": "Catch trending upward this week"
+      },
+      "health": {
+        "level": "good",
+        "headline": "Reporting normally"
+      },
+      "dataQuality": { "location": "good" }
+    }
+  ],
+  "notes": [
+    "DESIGN PREVIEW - every number on this page is invented sample data for styling work.",
+    "No real farm, coordinates, device tunnel, or owner information is included.",
+    "The live portal shows province/municipality aggregates only, never individual farms."
+  ]
+}
